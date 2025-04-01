@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Staying Guest</title>
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-image: url('bg.jpeg');
+      background-size: cover;
+      background-position: center;
+      font-family: 'Roboto Slab', serif;
+      margin: 0;
+      padding: 0;
+      color: white;
+      text-align: center;
+    }
+    h1 {
+      font-size: 3em;
+      margin-top: 100px;
+      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+    }
+    .btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+      font-size: 1.2em;
+      border-radius: 5px;
+    }
+    .btn:hover {
+      background-color: #45a049;
+    }
+    /* Modal Common Styling */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 50%;
+      text-align: center;
+      color: black;
+      position: relative;
+    }
+    .modal-content input {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      text-align: center;
+    }
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: #aaa;
+    }
+    .close:hover {
+      color: black;
+    }
+    /* Guest List Container */
+    #guestContainer {
+      margin-top: 50px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Staying Guest</h1>
+  <div id="guestContainer">
+    <!-- Guest buttons will be injected here -->
+  </div>
+
+  <!-- Guest Options Modal -->
+  <div id="guestOptionsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeGuestOptionsModal()">&times;</span>
+      <h2 id="selectedGuestName"></h2>
+      <button class="btn" onclick="openAddBillModal()">Add Bill</button>
+      <button class="btn" onclick="openViewBillModal()">View Bill</button>
+      <button class="btn" onclick="checkoutGuest()">CheckOut</button>
+    </div>
+  </div>
+
+  <!-- Add Bill Modal -->
+  <div id="addBillModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeAddBillModal()">&times;</span>
+      <h2>Add Bill</h2>
+      <input type="text" id="billItem" placeholder="Name" required />
+      <input type="number" id="billQuantity" placeholder="Quantity" required />
+      <input type="number" id="billPrice" placeholder="Price" required />
+      <button class="btn" onclick="saveBill()">Save</button>
+    </div>
+  </div>
+
+  <!-- View Bill Modal -->
+  <div id="viewBillModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeViewBillModal()">&times;</span>
+      <h2>View Bills</h2>
+      <div id="billListContainer"></div>
+      <h3 id="totalBalance"></h3>
+      <button class="btn" onclick="closeViewBillModal()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Retrieve guest data from localStorage.
+    // For demonstration, we assume the main page stored a single guest object under 'guestDetails'.
+    // In a full application, this would be an array of guest objects.
+    let guests = [];
+    const storedGuest = localStorage.getItem('guestDetails');
+    if (storedGuest) {
+      // Convert to array (if only one guest, push it into an array)
+      guests.push(JSON.parse(storedGuest));
+    }
+
+    // Display the guest list as buttons.
+    function displayGuests() {
+      const container = document.getElementById('guestContainer');
+      container.innerHTML = '';
+      if (guests.length === 0) {
+        container.innerHTML = '<p>No guests currently staying</p>';
+      } else {
+        guests.forEach((guest, index) => {
+          const btn = document.createElement('button');
+          btn.className = 'btn';
+          btn.textContent = guest.name;
+          btn.onclick = function() {
+            openGuestOptions(index);
+          };
+          container.appendChild(btn);
+        });
+      }
+    }
+    displayGuests();
+
+    let selectedGuestIndex = null;
+
+    // Open the Guest Options modal for a selected guest.
+    function openGuestOptions(index) {
+      selectedGuestIndex = index;
+      document.getElementById('selectedGuestName').textContent = guests[index].name;
+      document.getElementById('guestOptionsModal').style.display = 'block';
+    }
+    function closeGuestOptionsModal() {
+      document.getElementById('guestOptionsModal').style.display = 'none';
+    }
+
+    // Open and close Add Bill modal.
+    function openAddBillModal() {
+      document.getElementById('addBillModal').style.display = 'block';
+    }
+    function closeAddBillModal() {
+      document.getElementById('addBillModal').style.display = 'none';
+    }
+
+    // Save the bill details, update the balance for the selected guest.
+    function saveBill() {
+      const item = document.getElementById('billItem').value;
+      const quantity = parseFloat(document.getElementById('billQuantity').value);
+      const price = parseFloat(document.getElementById('billPrice').value);
+      if (item && quantity && price) {
+        const key = 'bills_' + guests[selectedGuestIndex].name;
+        let bills = JSON.parse(localStorage.getItem(key)) || [];
+        bills.push({ item, quantity, price });
+        localStorage.setItem(key, JSON.stringify(bills));
+        alert('Bill saved and balance updated!');
+        document.getElementById('billItem').value = '';
+        document.getElementById('billQuantity').value = '';
+        document.getElementById('billPrice').value = '';
+        closeAddBillModal();
+      } else {
+        alert('Please fill all fields');
+      }
+    }
+
+    // Open and close View Bill modal.
+    function openViewBillModal() {
+      const key = 'bills_' + guests[selectedGuestIndex].name;
+      let bills = JSON.parse(localStorage.getItem(key)) || [];
+      const container = document.getElementById('billListContainer');
+      container.innerHTML = '';
+      let total = 0;
+      if (bills.length === 0) {
+        container.innerHTML = '<p>No bills added.</p>';
+      } else {
+        bills.forEach(bill => {
+          const billDiv = document.createElement('div');
+          billDiv.textContent = `${bill.item} - Qty: ${bill.quantity} - Price: ${bill.price}`;
+          container.appendChild(billDiv);
+          total += bill.quantity * bill.price;
+        });
+      }
+      document.getElementById('totalBalance').textContent = 'Total Balance: ' + total;
+      document.getElementById('viewBillModal').style.display = 'block';
+    }
+    function closeViewBillModal() {
+      document.getElementById('viewBillModal').style.display = 'none';
+    }
+
+    // CheckOut: Remove the guest from the list and move to Pending Bill page.
+    function checkoutGuest() {
+      // Remove the guest from the local guest array.
+      guests.splice(selectedGuestIndex, 1);
+      // Update the guest list in localStorage if needed.
+      localStorage.removeItem('guestDetails');
+      displayGuests();
+      closeGuestOptionsModal();
+      // Redirect to the Pending Bills page.
+      window.location.href = 'pending_bills.html';
+    }
+  </script>
+</body>
+  </html>
