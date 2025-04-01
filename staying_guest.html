@@ -6,6 +6,9 @@
   <title>Staying Guest</title>
   <!-- Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700&display=swap" rel="stylesheet">
+  <!-- Firebase Libraries (using compat for ease of use) -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       background-image: url('bg.jpeg');
@@ -20,7 +23,7 @@
     h1 {
       font-size: 3em;
       margin-top: 100px;
-      text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.7);
+      text-shadow: 2px 2px 10px rgba(0,0,0,0.7);
     }
     .btn {
       background-color: #4CAF50;
@@ -44,7 +47,7 @@
       top: 0;
       width: 100%;
       height: 100%;
-      background-color: rgba(0, 0, 0, 0.7);
+      background-color: rgba(0,0,0,0.7);
     }
     .modal-content {
       background-color: #fefefe;
@@ -121,49 +124,52 @@
   </div>
 
   <script>
-    // Retrieve guest data from localStorage.
-    // For demonstration, we assume the main page stored a single guest object under 'guestDetails'.
-    // In a full application, this would be an array of guest objects.
-    let guests = [];
-    const storedGuest = localStorage.getItem('guestDetails');
-    if (storedGuest) {
-      // Convert to array (if only one guest, push it into an array)
-      guests.push(JSON.parse(storedGuest));
-    }
+    // TODO: Replace with your Firebase project configuration
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_STORAGE_BUCKET",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-    // Display the guest list as buttons.
-    function displayGuests() {
-      const container = document.getElementById('guestContainer');
-      container.innerHTML = '';
-      if (guests.length === 0) {
-        container.innerHTML = '<p>No guests currently staying</p>';
-      } else {
-        guests.forEach((guest, index) => {
-          const btn = document.createElement('button');
-          btn.className = 'btn';
-          btn.textContent = guest.name;
-          btn.onclick = function() {
-            openGuestOptions(index);
-          };
-          container.appendChild(btn);
-        });
-      }
-    }
-    displayGuests();
+    // Global variable to hold the selected guest document ID
+    let selectedGuestId = null;
 
-    let selectedGuestIndex = null;
-
-    // Open the Guest Options modal for a selected guest.
-    function openGuestOptions(index) {
-      selectedGuestIndex = index;
-      document.getElementById('selectedGuestName').textContent = guests[index].name;
-      document.getElementById('guestOptionsModal').style.display = 'block';
+    // Function to render guest list in real-time from Firestore.
+    function renderGuestList() {
+      db.collection("guests").onSnapshot((snapshot) => {
+        const container = document.getElementById('guestContainer');
+        container.innerHTML = '';
+        if (snapshot.empty) {
+          container.innerHTML = '<p>No guests currently staying</p>';
+        } else {
+          snapshot.forEach((doc) => {
+            const guest = doc.data();
+            const btn = document.createElement('button');
+            btn.className = 'btn';
+            btn.textContent = guest.name;
+            btn.onclick = function() {
+              selectedGuestId = doc.id;
+              document.getElementById('selectedGuestName').textContent = guest.name;
+              document.getElementById('guestOptionsModal').style.display = 'block';
+            };
+            container.appendChild(btn);
+          });
+        }
+      });
     }
+    renderGuestList();
+
+    // Guest Options Modal functions
     function closeGuestOptionsModal() {
       document.getElementById('guestOptionsModal').style.display = 'none';
     }
 
-    // Open and close Add Bill modal.
+    // Add Bill Modal functions
     function openAddBillModal() {
       document.getElementById('addBillModal').style.display = 'block';
     }
@@ -171,61 +177,77 @@
       document.getElementById('addBillModal').style.display = 'none';
     }
 
-    // Save the bill details, update the balance for the selected guest.
+    // Save bill details and update the guest's balance in Firestore.
     function saveBill() {
       const item = document.getElementById('billItem').value;
       const quantity = parseFloat(document.getElementById('billQuantity').value);
       const price = parseFloat(document.getElementById('billPrice').value);
-      if (item && quantity && price) {
-        const key = 'bills_' + guests[selectedGuestIndex].name;
-        let bills = JSON.parse(localStorage.getItem(key)) || [];
-        bills.push({ item, quantity, price });
-        localStorage.setItem(key, JSON.stringify(bills));
-        alert('Bill saved and balance updated!');
-        document.getElementById('billItem').value = '';
-        document.getElementById('billQuantity').value = '';
-        document.getElementById('billPrice').value = '';
-        closeAddBillModal();
+      if (item && quantity && price && selectedGuestId) {
+        const billTotal = quantity * price;
+        // Save bill in a subcollection "bills" under the guest document.
+        db.collection("guests").doc(selectedGuestId).collection("bills").add({
+          item: item,
+          quantity: quantity,
+          price: price,
+          total: billTotal,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => {
+          alert("Bill saved and balance updated!");
+          document.getElementById('billItem').value = '';
+          document.getElementById('billQuantity').value = '';
+          document.getElementById('billPrice').value = '';
+          closeAddBillModal();
+        }).catch((error) => {
+          console.error("Error adding bill: ", error);
+          alert("Error saving bill.");
+        });
       } else {
-        alert('Please fill all fields');
+        alert("Please fill all fields.");
       }
     }
 
-    // Open and close View Bill modal.
+    // View Bill Modal functions
     function openViewBillModal() {
-      const key = 'bills_' + guests[selectedGuestIndex].name;
-      let bills = JSON.parse(localStorage.getItem(key)) || [];
-      const container = document.getElementById('billListContainer');
-      container.innerHTML = '';
-      let total = 0;
-      if (bills.length === 0) {
-        container.innerHTML = '<p>No bills added.</p>';
-      } else {
-        bills.forEach(bill => {
-          const billDiv = document.createElement('div');
-          billDiv.textContent = `${bill.item} - Qty: ${bill.quantity} - Price: ${bill.price}`;
-          container.appendChild(billDiv);
-          total += bill.quantity * bill.price;
-        });
-      }
-      document.getElementById('totalBalance').textContent = 'Total Balance: ' + total;
+      if (!selectedGuestId) return;
+      const billListContainer = document.getElementById('billListContainer');
+      billListContainer.innerHTML = '';
+      let totalBalance = 0;
+      // Listen for real-time updates on bills for the selected guest.
+      db.collection("guests").doc(selectedGuestId).collection("bills").orderBy("timestamp").onSnapshot((snapshot) => {
+        billListContainer.innerHTML = '';
+        totalBalance = 0;
+        if (snapshot.empty) {
+          billListContainer.innerHTML = '<p>No bills added.</p>';
+        } else {
+          snapshot.forEach((doc) => {
+            const bill = doc.data();
+            totalBalance += bill.total;
+            const billDiv = document.createElement('div');
+            billDiv.textContent = `${bill.item} - Qty: ${bill.quantity} - Price: ${bill.price}`;
+            billListContainer.appendChild(billDiv);
+          });
+        }
+        document.getElementById('totalBalance').textContent = 'Total Balance: ' + totalBalance;
+      });
       document.getElementById('viewBillModal').style.display = 'block';
     }
     function closeViewBillModal() {
       document.getElementById('viewBillModal').style.display = 'none';
     }
 
-    // CheckOut: Remove the guest from the list and move to Pending Bill page.
+    // CheckOut: Remove the guest from Firestore and redirect to Pending Bills page.
     function checkoutGuest() {
-      // Remove the guest from the local guest array.
-      guests.splice(selectedGuestIndex, 1);
-      // Update the guest list in localStorage if needed.
-      localStorage.removeItem('guestDetails');
-      displayGuests();
-      closeGuestOptionsModal();
-      // Redirect to the Pending Bills page.
-      window.location.href = 'pending_bills.html';
+      if (selectedGuestId) {
+        db.collection("guests").doc(selectedGuestId).delete().then(() => {
+          alert("Guest checked out!");
+          closeGuestOptionsModal();
+          window.location.href = 'pending_bills.html';
+        }).catch((error) => {
+          console.error("Error during check-out: ", error);
+          alert("Error checking out guest.");
+        });
+      }
     }
   </script>
 </body>
-  </html>
+</html>
