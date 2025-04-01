@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -70,117 +69,104 @@
     </style>
 </head>
 <body>
-    <h1>Rave Raja Co-working Space & Hostel</h1>
-
-    <!-- PIN Modal -->
-    <div id="pinModal" class="pin-modal" style="display: block;">
-        <div class="modal-content">
-            <span class="close" onclick="closePinModal()">&times;</span>
-            <h2>Enter PIN to Continue</h2>
-            <input type="password" id="pinInput" placeholder="Enter PIN" maxlength="4">
-            <button class="btn" onclick="checkPin()">Submit</button>
-        </div>
+    <h1>Rave Raja Co-working Space & Hostel</h1><div id="pinModal" class="pin-modal" style="display: block;">
+    <div class="modal-content">
+        <span class="close" onclick="closePinModal()">&times;</span>
+        <h2>Enter PIN to Continue</h2>
+        <input type="password" id="pinInput" placeholder="Enter PIN" maxlength="4">
+        <button class="btn" onclick="checkPin()">Submit</button>
     </div>
+</div>
 
-    <div class="main-content">
-        <button class="btn" onclick="openModal('checkinModal')">New Check-In</button>
-        <button class="btn" onclick="location.href='staying_guest.html'">Staying Guest</button>
-        <button class="btn" onclick="location.href='pending_bills.html'">Pending Bill</button>
+<div class="main-content">
+    <button class="btn" onclick="openModal('checkinModal')">New Check-In</button>
+    <button class="btn" onclick="location.href='staying_guest.html'">Staying Guest</button>
+    <button class="btn" onclick="location.href='pending_bills.html'">Pending Bill</button>
+</div>
+
+<div id="checkinModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('checkinModal')">&times;</span>
+        <h2>New Check-In</h2>
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="tel" id="phone" placeholder="Ph.No." required>
+        <input type="number" id="pax" placeholder="No.of.Pax" required>
+        <input type="number" id="days" placeholder="No.Of.Days" required>
+        <input type="number" id="amount" placeholder="Total Amount" required>
+        <input type="number" id="advance" placeholder="Advance Amount" required>
+        <button class="btn" onclick="saveDetails()">Save</button>
     </div>
+</div>
 
-    <!-- New Check-In Modal -->
-    <div id="checkinModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('checkinModal')">&times;</span>
-            <h2>New Check-In</h2>
-            <input type="text" id="name" placeholder="Name" required>
-            <input type="tel" id="phone" placeholder="Ph.No." required>
-            <input type="number" id="pax" placeholder="No.of.Pax" required>
-            <input type="number" id="days" placeholder="No.Of.Days" required>
-            <input type="number" id="amount" placeholder="Total Amount" required>
-            <input type="number" id="advance" placeholder="Advance Amount" required>
-            <button class="btn" onclick="saveDetails()">Save</button>
-        </div>
-    </div>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyAI7cI6oCg9kalWE0u3kLNGjC5iH7xHDOQ",
+        authDomain: "raverajacoworkingspace-7f7ee.firebaseapp.com",
+        projectId: "raverajacoworkingspace-7f7ee",
+        storageBucket: "raverajacoworkingspace-7f7ee.appspot.com",
+        messagingSenderId: "534821803795",
+        appId: "1:534821803795:web:aab3c4c3fd790865562ce6"
+    };
 
-    <script>
-        // Firebase Configuration (Replace with your Firebase project details)
-        const firebaseConfig = {
-            apiKey: "AIzaSyAI7cI6oCg9kalWE0u3kLNGjC5iH7xHDOQ",
-            authDomain: "raverajacoworkingspace-7f7ee.firebaseapp.com",
-            projectId: "raverajacoworkingspace-7f7ee",
-            storageBucket: "raverajacoworkingspace-7f7ee.firebasestorage.app",
-            messagingSenderId: "534821803795",
-            appId: "1:534821803795:web:aab3c4c3fd790865562ce6"
-        };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
-        function checkPin() {
-            const pin = document.getElementById("pinInput").value;
-            if (pin === "8657") {
-                document.getElementById("pinModal").style.display = "none";
-                document.querySelector(".main-content").style.display = "block";
-            } else {
-                alert("Incorrect PIN. Please try again.");
-            }
-        }
-
-        function closePinModal() {
+    function checkPin() {
+        const pin = document.getElementById("pinInput").value;
+        if (pin === "8657") {
             document.getElementById("pinModal").style.display = "none";
+            document.querySelector(".main-content").style.display = "block";
+        } else {
+            alert("Incorrect PIN. Please try again.");
         }
+    }
 
-        function openModal(modalId) {
-            document.getElementById(modalId).style.display = "block";
+    function closePinModal() {
+        document.getElementById("pinModal").style.display = "none";
+    }
+
+    function openModal(modalId) {
+        document.getElementById(modalId).style.display = "block";
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = "none";
+    }
+
+    function saveDetails() {
+        const name = document.getElementById("name").value;
+        const phone = document.getElementById("phone").value;
+        const pax = document.getElementById("pax").value;
+        const days = document.getElementById("days").value;
+        const amount = document.getElementById("amount").value;
+        const advance = document.getElementById("advance").value;
+
+        if (name && phone && pax && days && amount && advance) {
+            db.collection("guests").add({
+                name: name,
+                phone: phone,
+                pax: pax,
+                days: days,
+                amount: parseInt(amount),
+                advance: parseInt(advance),
+                balance: parseInt(amount) - parseInt(advance),
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            }).then(() => {
+                alert("Guest added successfully!");
+                closeModal('checkinModal');
+                document.querySelectorAll("#checkinModal input").forEach(input => input.value = "");
+            }).catch(error => {
+                console.error("Error adding guest: ", error);
+                alert("Error adding guest details.");
+            });
+        } else {
+            alert("All fields are mandatory!");
         }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = "none";
-        }
-
-        // Save guest details to Firestore
-        function saveDetails() {
-            const name = document.getElementById("name").value;
-            const phone = document.getElementById("phone").value;
-            const pax = document.getElementById("pax").value;
-            const days = document.getElementById("days").value;
-            const amount = document.getElementById("amount").value;
-            const advance = document.getElementById("advance").value;
-
-            if (name && phone && pax && days && amount && advance) {
-                db.collection("guests").add({
-                    name: name,
-                    phone: phone,
-                    pax: pax,
-                    days: days,
-                    amount: parseInt(amount),
-                    advance: parseInt(advance),
-                    balance: parseInt(amount) - parseInt(advance),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                }).then(() => {
-                    alert("Guest added successfully!");
-                    closeModal('checkinModal');
-                    document.getElementById("name").value = "";
-                    document.getElementById("phone").value = "";
-                    document.getElementById("pax").value = "";
-                    document.getElementById("days").value = "";
-                    document.getElementById("amount").value = "";
-                    document.getElementById("advance").value = "";
-                }).catch((error) => {
-                    console.error("Error adding guest: ", error);
-                    alert("Error adding guest details.");
-                });
-            } else {
-                alert("All fields are mandatory!");
-            }
-        }
-    </script>
+    }
+</script>
 
 </body>
     </html>
