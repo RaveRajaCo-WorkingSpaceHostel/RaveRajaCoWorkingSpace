@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Guest Manager</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+      background: url('bg.jpeg') no-repeat center center fixed;
+      background-size: cover;
+    }
+    .container {
+      text-align: center;
+      margin-top: 100px;
+    }
+    button {
+      padding: 15px 30px;
+      margin: 20px;
+      font-size: 18px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+      display: none;
+    }
+    input {
+      display: block;
+      width: 100%;
+      margin: 10px 0;
+      padding: 8px;
+    }
+    .btn-group button {
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <button onclick="openNewGuest()">New Guest</button>
+  <button onclick="openStayingGuest()">Staying Guest</button>
+</div>
+
+<!-- Overlay -->
+<div class="overlay" id="overlay" onclick="closeModals()"></div>
+
+<!-- New Guest Modal -->
+<div class="modal" id="newGuestModal">
+  <h2>New Guest</h2>
+  <input type="text" id="guestName" placeholder="Guest Name">
+  <input type="text" id="guestNumber" placeholder="Phone Number">
+  <input type="number" id="totalAmount" placeholder="Total Amount">
+  <input type="number" id="advanceAmount" placeholder="Advance Paid">
+  <button onclick="saveNewGuest()">Save</button>
+</div>
+
+<!-- Staying Guest Modal -->
+<div class="modal" id="guestListModal">
+  <h2>Select Guest</h2>
+  <div id="guestList"></div>
+</div>
+
+<!-- Guest Options Modal -->
+<div class="modal" id="guestOptionsModal">
+  <h2 id="selectedGuestName"></h2>
+  <div class="btn-group">
+    <button onclick="openAddBill()">Add Bill</button>
+    <button onclick="viewBill()">View Bill</button>
+    <button onclick="closeBill()">Close Bill</button>
+  </div>
+</div>
+
+<!-- Add Bill Modal -->
+<div class="modal" id="addBillModal">
+  <h3>Add Bill</h3>
+  <input type="number" id="extraBill" placeholder="Extra Amount">
+  <button onclick="saveBill()">Save</button>
+</div>
+
+<!-- View Bill Modal -->
+<div class="modal" id="viewBillModal">
+  <h3>Bill Summary</h3>
+  <pre id="billSummary"></pre>
+</div>
+
+<!-- Firebase + App JS -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
